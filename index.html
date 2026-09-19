@@ -30,6 +30,7 @@
   .btn-disabled { background: rgba(245,243,237,0.08); color: rgba(245,243,237,0.25); cursor: default; }
   .btn-row { display: flex; gap: 8px; }
   .avatar { border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 800; background: #FF6B4A; color: #14162B; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .pick-screen { padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; }
   .pick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 420px; overflow-y: auto; }
   .pick-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 14px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F5F3ED; text-align: left; }
@@ -45,7 +46,6 @@
   .q-option { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 10px; padding: 9px 12px; font-size: 12px; font-weight: 600; color: #F5F3ED; cursor: pointer; text-align: left; width: 100%; }
   .q-option.selected { border-color: #FF6B4A; background: rgba(255,107,74,0.1); }
   .q-option.asked { opacity: 0.35; cursor: default; }
-  .q-selected { font-size: 15px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; color: #F5F3ED; }
   .ai-bubble { border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; text-align: center; }
   .ai-bubble.oui { background: rgba(76,217,100,0.12); border: 1px solid rgba(76,217,100,0.3); }
   .ai-bubble.non { background: rgba(255,107,74,0.12); border: 1px solid rgba(255,107,74,0.3); }
@@ -55,146 +55,234 @@
   .ai-sub { font-size: 11px; color: rgba(245,243,237,0.4); margin-top: 3px; }
   .handoff { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px; text-align: center; gap: 20px; }
   .handoff h2 { font-size: 24px; font-weight: 900; }
-  .result { text-align: center; }
   .guess-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
   .guess-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F5F3ED; text-align: left; }
   .back-q { width: 100%; padding: 10px 0; border-radius: 12px; border: 1px solid rgba(245,243,237,0.1); background: transparent; color: rgba(245,243,237,0.45); font-weight: 600; font-size: 13px; cursor: pointer; margin-top: 8px; }
-  .loading-text { text-align: center; color: rgba(245,243,237,0.4); font-size: 14px; padding: 12px 0; }
   .player-bar { padding: 7px 20px; background: rgba(255,107,74,0.1); font-size: 13px; color: #FF6B4A; font-weight: 700; text-align: center; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
 <script>
+const PHOTOS = {
+  "Lionel Messi":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/960px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+  "Cristiano Ronaldo":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/960px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg",
+  "Serena Williams":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Serena_Williams_at_the_2025_International_Tennis_Hall_of_Fame_Induction_Ceremony_Press_Conference_%28cropped%29.jpg/500px-Serena_Williams_at_the_2025_International_Tennis_Hall_of_Fame_Induction_Ceremony_Press_Conference_%28cropped%29.jpg",
+  "LeBron James":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Lebron_James_2022small.jpg/500px-Lebron_James_2022small.jpg",
+  "Usain Bolt":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Usain_Bolt_Rio_100m_final_2016i-cr.jpg/500px-Usain_Bolt_Rio_100m_final_2016i-cr.jpg",
+  "Michael Jordan":"https://upload.wikimedia.org/wikipedia/commons/a/ae/Michael_Jordan_in_2014.jpg",
+  "Simone Biles":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Simone_Biles_National_Team_2024.jpg/500px-Simone_Biles_National_Team_2024.jpg",
+  "Rafael Nadal":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Rafael_Nadal_2011_Roland_Garros_2011.jpg/500px-Rafael_Nadal_2011_Roland_Garros_2011.jpg",
+  "Kylian Mbappé":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Kylian_Mbappe_-_France_v_Norway_-_26_June_2026_%28cropped%29.jpg/960px-Kylian_Mbappe_-_France_v_Norway_-_26_June_2026_%28cropped%29.jpg",
+  "Naomi Osaka":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/NaomiOsaka-smile-2020.png/500px-NaomiOsaka-smile-2020.png",
+  "Novak Djokovic":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/960px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg",
+  "Muhammad Ali":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Muhammad_Ali_NYWTS.jpg/500px-Muhammad_Ali_NYWTS.jpg",
+  "Megan Rapinoe":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Megan_Rapinoe_on_20_July_2023_-_53058900298_%28cropped%29.jpg/500px-Megan_Rapinoe_on_20_July_2023_-_53058900298_%28cropped%29.jpg",
+  "Michael Phelps":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Michael_Phelps_Rio_Olympics_2016.jpg/960px-Michael_Phelps_Rio_Olympics_2016.jpg",
+  "Neymar":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg/960px-Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg",
+  "Katie Ledecky":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Katie_Ledecky_2016d.jpg/960px-Katie_Ledecky_2016d.jpg",
+  "Désiré Doué":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Desire_Doue_France_v_Senegal_16_June_2026-223_%28cropped%29.jpg/960px-Desire_Doue_France_v_Senegal_16_June_2026-223_%28cropped%29.jpg",
+  "Léon Marchand":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/L%C3%A9on_Marchand%2C_2023_Pac-12_Championships%2C_400_yard_individual_medley_preliminaries_-_3_March_2023.jpg/960px-L%C3%A9on_Marchand%2C_2023_Pac-12_Championships%2C_400_yard_individual_medley_preliminaries_-_3_March_2023.jpg",
+  "Femke Bol":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Femke_Bol_240823_Budapest_2023.jpg/960px-Femke_Bol_240823_Budapest_2023.jpg",
+  "Leonardo DiCaprio":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/LeoPTABFI191125-28_%28cropped%29.jpg/500px-LeoPTABFI191125-28_%28cropped%29.jpg",
+  "Meryl Streep":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg/500px-Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg",
+  "Denzel Washington":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg/500px-Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg",
+  "Scarlett Johansson":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Scarlett_Johansson_293_%28cropped2%29.jpg/500px-Scarlett_Johansson_293_%28cropped2%29.jpg",
+  "Tom Hanks":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Tom_Hanks_2016.jpg/500px-Tom_Hanks_2016.jpg",
+  "Angelina Jolie":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Angelina_Jolie-643531_%28cropped%29.jpg/960px-Angelina_Jolie-643531_%28cropped%29.jpg",
+  "Robert Downey Jr.":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/RobertDowneyJr-byPhilipRomano7_%28cropped%29.jpg/500px-RobertDowneyJr-byPhilipRomano7_%28cropped%29.jpg",
+  "Zendaya":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Zendaya-byPhilipRomano.jpg/500px-Zendaya-byPhilipRomano.jpg",
+  "Brad Pitt":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Brad_Pitt-69858.jpg/500px-Brad_Pitt-69858.jpg",
+  "Emma Watson":"https://upload.wikimedia.org/wikipedia/commons/f/f9/Emma_Watson_ONU_2017.jpg",
+  "Will Smith":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/TechCrunch_Disrupt_2019_%2848834434641%29_%28cropped%29.jpg/500px-TechCrunch_Disrupt_2019_%2848834434641%29_%28cropped%29.jpg",
+  "Penélope Cruz":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Penelope_Cruz_Venice_Film_Festival.jpg/500px-Penelope_Cruz_Venice_Film_Festival.jpg",
+  "Morgan Freeman":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg/1280px-Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg",
+  "Marion Cotillard":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Marion_Cotillard-1061_%28cropped%29.jpg/500px-Marion_Cotillard-1061_%28cropped%29.jpg",
+  "Dwayne Johnson":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Dwayne_Johnson-1809_%28cropped%29.jpg/500px-Dwayne_Johnson-1809_%28cropped%29.jpg",
+  "Charlize Theron":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/CharlizeTheron-byPhilipRomano.jpg/500px-CharlizeTheron-byPhilipRomano.jpg",
+  "Idris Elba":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Idris_Elba_A_House_of_Dynamite-23.jpg/960px-Idris_Elba_A_House_of_Dynamite-23.jpg",
+  "Natalie Portman":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/NataliePortman.jpg/500px-NataliePortman.jpg",
+  "Song Kang-ho":"https://upload.wikimedia.org/wikipedia/commons/d/df/Song_Gangho_2016.jpg",
+  "Tom Holland":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/TomHolland-byPhilipRomano.jpg/500px-TomHolland-byPhilipRomano.jpg",
+  "Barack Obama":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/President_Barack_Obama.jpg/500px-President_Barack_Obama.jpg",
+  "Angela Merkel":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Angela_Merkel_2023_%28cropped_2%29.jpg/500px-Angela_Merkel_2023_%28cropped_2%29.jpg",
+  "Nelson Mandela":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Nelson_Mandela_1994.jpg/500px-Nelson_Mandela_1994.jpg",
+  "Winston Churchill":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg/500px-Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg",
+  "Emmanuel Macron":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Emmanuel_Macron_2025_%28cropped%29.jpg/500px-Emmanuel_Macron_2025_%28cropped%29.jpg",
+  "Vladimir Poutine":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_%D0%9F%D1%83%D1%82%D0%B8%D0%BD_%2808-03-2024%29_%28cropped%29_%28higher_res%29.jpg/500px-%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_%D0%9F%D1%83%D1%82%D0%B8%D0%BD_%2808-03-2024%29_%28cropped%29_%28higher_res%29.jpg",
+  "Margaret Thatcher":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Margaret_Thatcher_stock_portrait_%28cropped%29.jpg/500px-Margaret_Thatcher_stock_portrait_%28cropped%29.jpg",
+  "Xi Jinping":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Xi_Jinping_in_Beijing_on_May_13%2C_2025_%28cropped%29.jpg/500px-Xi_Jinping_in_Beijing_on_May_13%2C_2025_%28cropped%29.jpg",
+  "Mahatma Gandhi":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Mahatma-Gandhi%2C_studio%2C_1931.jpg/500px-Mahatma-Gandhi%2C_studio%2C_1931.jpg",
+  "Donald Trump":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg/500px-Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg",
+  "Justin Trudeau":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Justin_Trudeau_at_the_European_Commission_-_2025.jpg/500px-Justin_Trudeau_at_the_European_Commission_-_2025.jpg",
+  "Indira Gandhi":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Prime_Minister_Indira_Gandhi_in_the_US_enhanced.jpg/500px-Prime_Minister_Indira_Gandhi_in_the_US_enhanced.jpg",
+  "Charles de Gaulle":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/De_Gaulle-OWI_%283x4_cropped%29_%282%29.jpg/500px-De_Gaulle-OWI_%283x4_cropped%29_%282%29.jpg",
+  "Jacinda Ardern":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Jacinda_Ardern_August_2022_%28cropped%29.jpg/500px-Jacinda_Ardern_August_2022_%28cropped%29.jpg",
+  "Fidel Castro":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Fidel_Castro_1950s.jpg/500px-Fidel_Castro_1950s.jpg",
+  "Golda Meir":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Golda_Meir_03265u-2.jpg/500px-Golda_Meir_03265u-2.jpg",
+  "Volodymyr Zelensky":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Volodymyr_Zelensky_2022_official_portrait_%28cropped%29.jpg/500px-Volodymyr_Zelensky_2022_official_portrait_%28cropped%29.jpg",
+  "Franklin D. Roosevelt":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/1944_Official_Campaign_Portrait_session_%288145288140%29.jpg/500px-1944_Official_Campaign_Portrait_session_%288145288140%29.jpg",
+  "Kamala Harris":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Kamala_Harris_Vice_Presidential_Portrait.jpg/500px-Kamala_Harris_Vice_Presidential_Portrait.jpg",
+  "Benazir Bhutto":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Oliver_Mark_-_Benazir_Bhutto%2C_Dubai_2006_%28cropped%29.jpg/500px-Oliver_Mark_-_Benazir_Bhutto%2C_Dubai_2006_%28cropped%29.jpg",
+  "Beyoncé":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg/500px-Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg",
+  "Ed Sheeran":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Ed_Sheeran-6826_%28cropped%29.jpg/500px-Ed_Sheeran-6826_%28cropped%29.jpg",
+  "Rihanna":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Rihanna_Fenty_2018.png/500px-Rihanna_Fenty_2018.png",
+  "Drake":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Drake_July_2016.jpg/500px-Drake_July_2016.jpg",
+  "Taylor Swift":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Taylor_Swift_at_the_Golden_Globes_2024_%28Enhanced%2C_cropped%29_2.jpg/960px-Taylor_Swift_at_the_Golden_Globes_2024_%28Enhanced%2C_cropped%29_2.jpg",
+  "The Weeknd":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/The_Weeknd_Portrait_by_Brian_Ziff.jpg/500px-The_Weeknd_Portrait_by_Brian_Ziff.jpg",
+  "Adele":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Adele_2016.jpg/500px-Adele_2016.jpg",
+  "Bad Bunny":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Bad_Bunny_Performs_%28cropped%29.jpg/500px-Bad_Bunny_Performs_%28cropped%29.jpg",
+  "Freddie Mercury":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Freddie_Mercury_performing_in_New_Haven%2C_CT%2C_November_1977.jpg/500px-Freddie_Mercury_performing_in_New_Haven%2C_CT%2C_November_1977.jpg",
+  "Michael Jackson":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Michael_Jackson_with_Grammy_Awards_in_1984.jpg/960px-Michael_Jackson_with_Grammy_Awards_in_1984.jpg",
+  "Céline Dion":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/C%C3%A9line_Dion_2012.jpg/500px-C%C3%A9line_Dion_2012.jpg",
+  "Bruno Mars":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Bruno_Mars_-_24K_Magic_Tour_%2837320927992%29.jpg/500px-Bruno_Mars_-_24K_Magic_Tour_%2837320927992%29.jpg",
+  "BTS":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/BTS_during_a_White_House_press_conference_May_31%2C_2022_%28cropped%29.jpg/960px-BTS_during_a_White_House_press_conference_May_31%2C_2022_%28cropped%29.jpg",
+  "Elton John":"https://upload.wikimedia.org/wikipedia/commons/6/61/EltonDocBFILFF101024_%284_of_17%29_%28cropped%29.jpg",
+  "Shakira":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Shakira_crooped_SHARIKA_MEDELLIN_13_04_2025.jpg/500px-Shakira_crooped_SHARIKA_MEDELLIN_13_04_2025.jpg",
+  "Eminem":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Eminem_2021_Color_Corrected.jpg/500px-Eminem_2021_Color_Corrected.jpg",
+  "Billie Eilish":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/BillieEilishO2140725-39_-_54665577407_%28cropped%29.jpg/500px-BillieEilishO2140725-39_-_54665577407_%28cropped%29.jpg",
+  "Bob Marley":"https://upload.wikimedia.org/wikipedia/commons/5/5e/Bob-Marley.jpg",
+  "Ariana Grande":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Ariana_Grande_Eternal_Sunshine_Tour_performing_%28cropped%29.jpg/1280px-Ariana_Grande_Eternal_Sunshine_Tour_performing_%28cropped%29.jpg",
+  "Stromae":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Le_chanteur_Stromae.jpg/960px-Le_chanteur_Stromae.jpg",
+  "MrBeast":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/MrBeast_in_2026_%28cropped_4%29.png/500px-MrBeast_in_2026_%28cropped_4%29.png",
+  "Kylie Jenner":"https://upload.wikimedia.org/wikipedia/commons/9/99/Guests_at_the_2026_Met_Gala_134_%28Kylie_Jenner%29.jpg",
+  "Charli D'Amelio":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Charli_D%27Amelio_in_Nov_2020_5.jpg/500px-Charli_D%27Amelio_in_Nov_2020_5.jpg",
+  "PewDiePie":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Pewdiepie_head_shot.jpg/500px-Pewdiepie_head_shot.jpg",
+  "Khaby Lame":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/KhabyLame.jpg/500px-KhabyLame.jpg",
+  "Zach King":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zach_King_Photo.jpg/500px-Zach_King_Photo.jpg",
+  "Addison Rae":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/LanaWembley030725-16_%28cropped_2%29.jpg/500px-LanaWembley030725-16_%28cropped_2%29.jpg",
+  "Squeezie":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Squeezie_Zack_en_Roue_Libre_2025.png/500px-Squeezie_Zack_en_Roue_Libre_2025.png",
+  "Emma Chamberlain":"https://upload.wikimedia.org/wikipedia/commons/3/31/Emma_Chamberlain_at_%2721_Paris_Fashion_Week_%28cropped%29.jpg",
+  "James Charles":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/James_Charles_%282019%29.png/500px-James_Charles_%282019%29.png",
+  "Logan Paul":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Logan_Paul_%2848086619418%29.jpg/500px-Logan_Paul_%2848086619418%29.jpg",
+  "Huda Kattan":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/HudaKattan.jpg/500px-HudaKattan.jpg",
+  "Casey Neistat":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Casey_Neistat_%40_SXSW_2017_%2833229303282%29_%28cropped%29.jpg/500px-Casey_Neistat_%40_SXSW_2017_%2833229303282%29_%28cropped%29.jpg",
+  "Liza Koshy":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Liza_Koshy_on_Pretty_Big_Deal.png/500px-Liza_Koshy_on_Pretty_Big_Deal.png",
+  "Amouranth":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Amouranth_in_2022.jpg/500px-Amouranth_in_2022.jpg",
+  "Dylan Mulvaney":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/DylanMulvaney-byPhilipRomano.jpg/500px-DylanMulvaney-byPhilipRomano.jpg",
+  "Inoxtag":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Inoxtag-2023.jpg/500px-Inoxtag-2023.jpg",
+  "Michelle Phan":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Michelle_Phan.jpg/500px-Michelle_Phan.jpg",
+  "Marques Brownlee":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MARQUES_BROWNLEE_Profile_Picture.jpg/500px-MARQUES_BROWNLEE_Profile_Picture.jpg",
+  "Nikkie de Jager":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/NikkiedeJager2020-2.jpg/500px-NikkiedeJager2020-2.jpg"
+};
 const CATS = [
-  { id:"sportifs", nom:"Sportifs", emoji:"⚽",
-    questions:["Sport individuel (pas collectif) ?","A gagné une médaille olympique ?","Nationalité européenne ?","Homme ?","Encore actif ?","A plus de 30 ans ?","Footballeur ?","Tennisman/Tenniswoman ?","Nageur/Nageuse ?","A un surnom très connu ?"],
-    personnages:["Lionel Messi","Cristiano Ronaldo","Serena Williams","LeBron James","Usain Bolt","Michael Jordan","Simone Biles","Rafael Nadal","Kylian Mbappé","Naomi Osaka","Novak Djokovic","Muhammad Ali","Megan Rapinoe","Michael Phelps","Neymar","Katie Ledecky","Neisser Loyola","Désiré Doué","Léon Marchand","Femke Bol"] },
-  { id:"acteurs", nom:"Acteurs", emoji:"🎬",
-    questions:["A gagné un Oscar ou équivalent ?","Plus connu au cinéma qu'en série ?","Américain(e) ?","Homme ?","Carrière avant les années 2000 ?","Joue dans des super-héros / franchises ?","A plus de 50 ans ?","A joué un méchant marquant ?","Connu(e) pour autre chose que le jeu d'acteur ?","Originaire d'un pays anglophone ?"],
-    personnages:["Leonardo DiCaprio","Meryl Streep","Denzel Washington","Scarlett Johansson","Tom Hanks","Angelina Jolie","Robert Downey Jr.","Zendaya","Brad Pitt","Emma Watson","Will Smith","Penélope Cruz","Morgan Freeman","Marion Cotillard","Dwayne Johnson","Charlize Theron","Idris Elba","Natalie Portman","Song Kang-ho","Tom Holland"] },
-  { id:"politiques", nom:"Politiques", emoji:"🏛️",
-    questions:["Encore en vie ?","En exercice aujourd'hui ?","Chef d'État (président, roi…) ?","Personnage avant 1990 ?","Homme ?","A remporté un prix Nobel ?","Impliqué dans un scandale médiatisé ?","A plus de 60 ans ?","Décédé(e) ?","Nationalité européenne ?"],
-    personnages:["Barack Obama","Angela Merkel","Nelson Mandela","Winston Churchill","Emmanuel Macron","Vladimir Poutine","Margaret Thatcher","Xi Jinping","Mahatma Gandhi","Donald Trump","Justin Trudeau","Indira Gandhi","Charles de Gaulle","Jacinda Ardern","Fidel Castro","Golda Meir","Volodymyr Zelensky","Franklin D. Roosevelt","Kamala Harris","Benazir Bhutto"] },
-  { id:"musiciens", nom:"Musiciens", emoji:"🎵",
-    questions:["Genre pop ou R&B ?","Solo (pas un groupe) ?","Nationalité européenne ?","Homme ?","Chante en français ?","Percée avant 2010 ?","Joue d'un instrument sur scène ?","A plus de 40 ans ?","A remporté un Grammy ?","Encore en activité aujourd'hui ?"],
-    personnages:["Beyoncé","Ed Sheeran","Rihanna","Drake","Taylor Swift","The Weeknd","Adele","Bad Bunny","Freddie Mercury","Michael Jackson","Céline Dion","Bruno Mars","BTS","Elton John","Shakira","Eminem","Billie Eilish","Bob Marley","Ariana Grande","Stromae"] },
-  { id:"influenceurs", nom:"Créateurs", emoji:"📱",
-    questions:["Plateforme principale YouTube ?","Contenu humour ou gaming ?","Nationalité américaine ?","Homme ?","Plus de 50 millions d'abonnés ?","Fait aussi de la télé ou cinéma ?","A commencé avant 2015 ?","Fait du contenu en équipe ?","A eu une polémique publique ?","A une marque à son nom ?"],
-    personnages:["MrBeast","Kylie Jenner","Charli D'Amelio","PewDiePie","Khaby Lame","Zach King","Addison Rae","Squeezie","Emma Chamberlain","James Charles","Logan Paul","Huda Kattan","Casey Neistat","Liza Koshy","Amouranth","Dylan Mulvaney","Inoxtag","Michelle Phan","Marques Brownlee","Nikkie de Jager"] }
+  { id:"sportifs", nom:"Sportifs", emoji:"⚽", questions:["Sport individuel (pas collectif) ?","A gagné une médaille olympique ?","Nationalité européenne ?","Homme ?","Encore actif ?","A plus de 30 ans ?","Footballeur ?","Tennisman/Tenniswoman ?","Nageur/Nageuse ?","A un surnom très connu ?"], personnages:["Lionel Messi","Cristiano Ronaldo","Serena Williams","LeBron James","Usain Bolt","Michael Jordan","Simone Biles","Rafael Nadal","Kylian Mbappé","Naomi Osaka","Novak Djokovic","Muhammad Ali","Megan Rapinoe","Michael Phelps","Neymar","Katie Ledecky","Neisser Loyola","Désiré Doué","Léon Marchand","Femke Bol"] },
+  { id:"acteurs", nom:"Acteurs", emoji:"🎬", questions:["A gagné un Oscar ou équivalent ?","Plus connu au cinéma qu'en série ?","Américain(e) ?","Homme ?","Carrière avant les années 2000 ?","Joue dans des super-héros / franchises ?","A plus de 50 ans ?","A joué un méchant marquant ?","Connu(e) pour autre chose que le jeu d'acteur ?","Originaire d'un pays anglophone ?"], personnages:["Leonardo DiCaprio","Meryl Streep","Denzel Washington","Scarlett Johansson","Tom Hanks","Angelina Jolie","Robert Downey Jr.","Zendaya","Brad Pitt","Emma Watson","Will Smith","Penélope Cruz","Morgan Freeman","Marion Cotillard","Dwayne Johnson","Charlize Theron","Idris Elba","Natalie Portman","Song Kang-ho","Tom Holland"] },
+  { id:"politiques", nom:"Politiques", emoji:"🏛️", questions:["Encore en vie ?","En exercice aujourd'hui ?","Chef d'État (président, roi…) ?","Personnage avant 1990 ?","Homme ?","A remporté un prix Nobel ?","Impliqué dans un scandale médiatisé ?","A plus de 60 ans ?","Décédé(e) ?","Nationalité européenne ?"], personnages:["Barack Obama","Angela Merkel","Nelson Mandela","Winston Churchill","Emmanuel Macron","Vladimir Poutine","Margaret Thatcher","Xi Jinping","Mahatma Gandhi","Donald Trump","Justin Trudeau","Indira Gandhi","Charles de Gaulle","Jacinda Ardern","Fidel Castro","Golda Meir","Volodymyr Zelensky","Franklin D. Roosevelt","Kamala Harris","Benazir Bhutto"] },
+  { id:"musiciens", nom:"Musiciens", emoji:"🎵", questions:["Genre pop ou R&B ?","Solo (pas un groupe) ?","Nationalité européenne ?","Homme ?","Chante en français ?","Percée avant 2010 ?","Joue d'un instrument sur scène ?","A plus de 40 ans ?","A remporté un Grammy ?","Encore en activité aujourd'hui ?"], personnages:["Beyoncé","Ed Sheeran","Rihanna","Drake","Taylor Swift","The Weeknd","Adele","Bad Bunny","Freddie Mercury","Michael Jackson","Céline Dion","Bruno Mars","BTS","Elton John","Shakira","Eminem","Billie Eilish","Bob Marley","Ariana Grande","Stromae"] },
+  { id:"influenceurs", nom:"Créateurs", emoji:"📱", questions:["Plateforme principale YouTube ?","Contenu humour ou gaming ?","Nationalité américaine ?","Homme ?","Plus de 50 millions d'abonnés ?","Fait aussi de la télé ou cinéma ?","A commencé avant 2015 ?","Fait du contenu en équipe ?","A eu une polémique publique ?","A une marque à son nom ?"], personnages:["MrBeast","Kylie Jenner","Charli D'Amelio","PewDiePie","Khaby Lame","Zach King","Addison Rae","Squeezie","Emma Chamberlain","James Charles","Logan Paul","Huda Kattan","Casey Neistat","Liza Koshy","Amouranth","Dylan Mulvaney","Inoxtag","Michelle Phan","Marques Brownlee","Nikkie de Jager"] }
 ];
 
-// Réponses pré-définies : CATS[i].reponses[personnage][qIndex] = true/false
 const REPONSES = {
   sportifs: {
-    "Lionel Messi":        [false,true,false,true,true,true,true,false,false,true],
-    "Cristiano Ronaldo":   [false,false,true,true,true,true,true,false,false,true],
-    "Serena Williams":     [true,true,false,false,false,true,false,true,false,false],
-    "LeBron James":        [false,true,false,true,true,true,false,false,false,true],
-    "Usain Bolt":          [true,true,false,true,false,true,false,false,false,true],
-    "Michael Jordan":      [false,true,false,true,false,true,false,false,false,true],
-    "Simone Biles":        [true,true,false,false,true,false,false,false,false,false],
-    "Rafael Nadal":        [true,true,true,true,false,true,false,true,false,true],
-    "Kylian Mbappé":       [false,false,true,true,true,false,true,false,false,false],
-    "Naomi Osaka":         [true,false,false,false,true,false,false,true,false,false],
-    "Novak Djokovic":      [true,true,true,true,true,true,false,true,false,true],
-    "Muhammad Ali":        [true,true,false,true,false,true,false,false,false,true],
-    "Megan Rapinoe":       [false,true,false,false,false,true,true,false,false,false],
-    "Michael Phelps":      [true,true,false,true,false,true,false,false,true,true],
-    "Neymar":              [false,true,false,true,true,true,true,false,false,false],
-    "Katie Ledecky":       [true,true,false,false,true,false,false,false,true,false],
-    "Neisser Loyola":      [true,false,false,true,true,false,false,false,false,false],
-    "Désiré Doué":         [false,false,true,true,true,false,true,false,false,false],
-    "Léon Marchand":       [true,true,true,true,true,false,false,false,true,false],
-    "Femke Bol":           [true,true,true,false,true,false,false,false,false,false]
+    "Lionel Messi":[false,true,false,true,true,true,true,false,false,true],
+    "Cristiano Ronaldo":[false,false,true,true,true,true,true,false,false,true],
+    "Serena Williams":[true,true,false,false,false,true,false,true,false,false],
+    "LeBron James":[false,true,false,true,true,true,false,false,false,true],
+    "Usain Bolt":[true,true,false,true,false,true,false,false,false,true],
+    "Michael Jordan":[false,true,false,true,false,true,false,false,false,true],
+    "Simone Biles":[true,true,false,false,true,false,false,false,false,false],
+    "Rafael Nadal":[true,true,true,true,false,true,false,true,false,true],
+    "Kylian Mbappé":[false,false,true,true,true,false,true,false,false,false],
+    "Naomi Osaka":[true,false,false,false,true,false,false,true,false,false],
+    "Novak Djokovic":[true,true,true,true,true,true,false,true,false,true],
+    "Muhammad Ali":[true,true,false,true,false,true,false,false,false,true],
+    "Megan Rapinoe":[false,true,false,false,false,true,true,false,false,false],
+    "Michael Phelps":[true,true,false,true,false,true,false,false,true,true],
+    "Neymar":[false,true,false,true,true,true,true,false,false,false],
+    "Katie Ledecky":[true,true,false,false,true,false,false,false,true,false],
+    "Neisser Loyola":[true,false,false,true,true,false,false,false,false,false],
+    "Désiré Doué":[false,false,true,true,true,false,true,false,false,false],
+    "Léon Marchand":[true,true,true,true,true,false,false,false,true,false],
+    "Femke Bol":[true,true,true,false,true,false,false,false,false,false]
   },
   acteurs: {
-    "Leonardo DiCaprio":   [true,true,true,true,true,false,true,false,false,true],
-    "Meryl Streep":        [true,true,true,false,true,false,true,false,false,true],
-    "Denzel Washington":   [true,true,true,true,true,false,true,true,false,true],
-    "Scarlett Johansson":  [false,true,true,false,false,false,false,false,false,true],
-    "Tom Hanks":           [true,true,true,true,true,false,true,false,false,true],
-    "Angelina Jolie":      [true,true,true,false,true,false,true,false,true,true],
-    "Robert Downey Jr.":   [true,true,true,true,true,false,true,false,false,true],
-    "Zendaya":             [false,true,true,false,false,false,false,false,false,true],
-    "Brad Pitt":           [true,true,true,true,true,false,true,false,false,true],
-    "Emma Watson":         [false,true,false,false,true,false,false,false,true,true],
-    "Will Smith":          [true,true,true,true,true,false,true,false,false,true],
-    "Penélope Cruz":       [true,true,false,false,true,false,true,false,false,false],
-    "Morgan Freeman":      [true,true,true,true,true,false,true,false,false,true],
-    "Marion Cotillard":    [true,true,false,false,true,false,true,false,false,false],
-    "Dwayne Johnson":      [false,true,true,true,true,false,true,false,true,true],
-    "Charlize Theron":     [true,true,false,false,true,false,true,true,false,false],
-    "Idris Elba":          [false,false,false,true,true,false,true,true,false,true],
-    "Natalie Portman":     [true,true,true,false,true,false,false,false,false,true],
-    "Song Kang-ho":        [false,true,false,true,true,false,true,false,false,false],
-    "Tom Holland":         [false,true,false,true,false,false,false,false,false,true]
+    "Leonardo DiCaprio":[true,true,true,true,true,false,true,false,false,true],
+    "Meryl Streep":[true,true,true,false,true,false,true,false,false,true],
+    "Denzel Washington":[true,true,true,true,true,false,true,true,false,true],
+    "Scarlett Johansson":[false,true,true,false,false,false,false,false,false,true],
+    "Tom Hanks":[true,true,true,true,true,false,true,false,false,true],
+    "Angelina Jolie":[true,true,true,false,true,false,true,false,true,true],
+    "Robert Downey Jr.":[true,true,true,true,true,false,true,false,false,true],
+    "Zendaya":[false,true,true,false,false,false,false,false,false,true],
+    "Brad Pitt":[true,true,true,true,true,false,true,false,false,true],
+    "Emma Watson":[false,true,false,false,true,false,false,false,true,true],
+    "Will Smith":[true,true,true,true,true,false,true,false,false,true],
+    "Penélope Cruz":[true,true,false,false,true,false,true,false,false,false],
+    "Morgan Freeman":[true,true,true,true,true,false,true,false,false,true],
+    "Marion Cotillard":[true,true,false,false,true,false,true,false,false,false],
+    "Dwayne Johnson":[false,true,true,true,true,false,true,false,true,true],
+    "Charlize Theron":[true,true,false,false,true,false,true,true,false,false],
+    "Idris Elba":[false,false,false,true,true,false,true,true,false,true],
+    "Natalie Portman":[true,true,true,false,true,false,false,false,false,true],
+    "Song Kang-ho":[false,true,false,true,true,false,true,false,false,false],
+    "Tom Holland":[false,true,false,true,false,false,false,false,false,true]
   },
   politiques: {
-    "Barack Obama":        [true,false,false,false,true,true,false,true,false,false],
-    "Angela Merkel":       [true,false,false,false,false,false,false,true,false,true],
-    "Nelson Mandela":      [false,false,false,false,true,true,false,true,true,false],
-    "Winston Churchill":   [false,false,true,true,true,false,false,true,true,true],
-    "Emmanuel Macron":     [true,true,false,false,true,false,false,false,false,true],
-    "Vladimir Poutine":    [true,true,false,false,true,false,true,true,false,false],
-    "Margaret Thatcher":   [false,false,true,true,false,false,false,true,true,true],
-    "Xi Jinping":          [true,true,false,false,true,false,false,true,false,false],
-    "Mahatma Gandhi":      [false,false,true,true,true,false,false,true,true,false],
-    "Donald Trump":        [true,true,false,false,true,false,true,true,false,false],
-    "Justin Trudeau":      [true,false,false,false,true,false,false,false,false,false],
-    "Indira Gandhi":       [false,false,true,true,false,false,false,true,true,false],
-    "Charles de Gaulle":   [false,false,true,true,true,false,false,true,true,true],
-    "Jacinda Ardern":      [true,false,false,false,false,false,false,false,false,false],
-    "Fidel Castro":        [false,false,true,true,true,false,true,true,true,false],
-    "Golda Meir":          [false,false,true,true,false,false,false,true,true,false],
-    "Volodymyr Zelensky":  [true,true,false,false,true,false,false,false,false,true],
+    "Barack Obama":[true,false,false,false,true,true,false,true,false,false],
+    "Angela Merkel":[true,false,false,false,false,false,false,true,false,true],
+    "Nelson Mandela":[false,false,false,false,true,true,false,true,true,false],
+    "Winston Churchill":[false,false,true,true,true,false,false,true,true,true],
+    "Emmanuel Macron":[true,true,false,false,true,false,false,false,false,true],
+    "Vladimir Poutine":[true,true,false,false,true,false,true,true,false,false],
+    "Margaret Thatcher":[false,false,true,true,false,false,false,true,true,true],
+    "Xi Jinping":[true,true,false,false,true,false,false,true,false,false],
+    "Mahatma Gandhi":[false,false,true,true,true,false,false,true,true,false],
+    "Donald Trump":[true,true,false,false,true,false,true,true,false,false],
+    "Justin Trudeau":[true,false,false,false,true,false,false,false,false,false],
+    "Indira Gandhi":[false,false,true,true,false,false,false,true,true,false],
+    "Charles de Gaulle":[false,false,true,true,true,false,false,true,true,true],
+    "Jacinda Ardern":[true,false,false,false,false,false,false,false,false,false],
+    "Fidel Castro":[false,false,true,true,true,false,true,true,true,false],
+    "Golda Meir":[false,false,true,true,false,false,false,true,true,false],
+    "Volodymyr Zelensky":[true,true,false,false,true,false,false,false,false,true],
     "Franklin D. Roosevelt":[false,false,true,true,true,false,false,true,true,false],
-    "Kamala Harris":       [true,false,false,false,false,false,false,false,false,false],
-    "Benazir Bhutto":      [false,false,true,true,false,false,true,true,true,false]
+    "Kamala Harris":[true,false,false,false,false,false,false,false,false,false],
+    "Benazir Bhutto":[false,false,true,true,false,false,true,true,true,false]
   },
   musiciens: {
-    "Beyoncé":       [true,true,false,false,false,true,false,true,true,true],
-    "Ed Sheeran":    [true,true,true,true,false,false,true,false,true,true],
-    "Rihanna":       [true,true,false,false,false,true,false,false,true,true],
-    "Drake":         [false,true,false,true,false,false,false,false,true,true],
-    "Taylor Swift":  [true,true,false,false,false,true,true,false,true,true],
-    "The Weeknd":    [true,true,false,true,false,false,false,false,true,true],
-    "Adele":         [true,true,true,false,false,false,false,false,true,true],
-    "Bad Bunny":     [false,true,false,true,false,false,false,false,true,true],
+    "Beyoncé":[true,true,false,false,false,true,false,true,true,true],
+    "Ed Sheeran":[true,true,true,true,false,false,true,false,true,true],
+    "Rihanna":[true,true,false,false,false,true,false,false,true,true],
+    "Drake":[false,true,false,true,false,false,false,false,true,true],
+    "Taylor Swift":[true,true,false,false,false,true,true,false,true,true],
+    "The Weeknd":[true,true,false,true,false,false,false,false,true,true],
+    "Adele":[true,true,true,false,false,false,false,false,true,true],
+    "Bad Bunny":[false,true,false,true,false,false,false,false,true,true],
     "Freddie Mercury":[false,false,true,true,false,true,true,true,true,false],
     "Michael Jackson":[true,true,false,true,false,true,false,true,true,false],
-    "Céline Dion":   [true,true,false,false,true,true,false,true,true,true],
-    "Bruno Mars":    [true,true,false,true,false,false,true,false,true,true],
-    "BTS":           [false,false,false,true,false,false,false,false,true,true],
-    "Elton John":    [false,false,true,true,false,true,true,true,true,true],
-    "Shakira":       [true,true,false,false,false,true,false,true,true,true],
-    "Eminem":        [false,true,false,true,false,true,false,true,true,true],
-    "Billie Eilish": [true,true,false,false,false,false,false,false,true,true],
-    "Bob Marley":    [false,false,false,true,false,true,true,true,false,false],
-    "Ariana Grande": [true,true,false,false,false,false,false,false,true,true],
-    "Stromae":       [false,true,true,true,true,false,false,false,false,true]
+    "Céline Dion":[true,true,false,false,true,true,false,true,true,true],
+    "Bruno Mars":[true,true,false,true,false,false,true,false,true,true],
+    "BTS":[false,false,false,true,false,false,false,false,true,true],
+    "Elton John":[false,false,true,true,false,true,true,true,true,true],
+    "Shakira":[true,true,false,false,false,true,false,true,true,true],
+    "Eminem":[false,true,false,true,false,true,false,true,true,true],
+    "Billie Eilish":[true,true,false,false,false,false,false,false,true,true],
+    "Bob Marley":[false,false,false,true,false,true,true,true,false,false],
+    "Ariana Grande":[true,true,false,false,false,false,false,false,true,true],
+    "Stromae":[false,true,true,true,true,false,false,false,false,true]
   },
   influenceurs: {
-    "MrBeast":          [true,false,true,true,true,false,false,false,false,true],
-    "Kylie Jenner":     [false,false,true,false,true,true,true,false,true,true],
-    "Charli D'Amelio":  [false,false,true,false,true,false,false,false,true,true],
-    "PewDiePie":        [true,true,false,true,true,false,true,false,true,false],
-    "Khaby Lame":       [false,true,false,true,true,false,false,false,false,true],
-    "Zach King":        [false,false,true,true,false,false,true,false,false,false],
-    "Addison Rae":      [false,false,true,false,false,true,false,false,false,true],
-    "Squeezie":         [true,true,false,true,false,false,false,false,false,true],
-    "Emma Chamberlain": [true,false,true,false,false,false,false,false,false,true],
-    "James Charles":    [true,false,true,true,false,false,false,false,true,true],
-    "Logan Paul":       [true,false,true,true,false,true,true,false,true,true],
-    "Huda Kattan":      [false,false,true,false,false,false,true,false,false,true],
-    "Casey Neistat":    [true,false,true,true,false,false,true,false,false,true],
-    "Liza Koshy":       [true,false,true,false,false,true,true,false,false,false],
-    "Amouranth":        [false,true,true,false,false,false,false,false,true,true],
-    "Dylan Mulvaney":   [false,false,true,false,false,false,false,false,true,false],
-    "Inoxtag":          [true,true,false,true,false,false,false,false,false,false],
-    "Michelle Phan":    [true,false,true,false,false,false,true,false,false,true],
-    "Marques Brownlee": [true,false,true,true,false,false,true,false,false,false],
-    "Nikkie de Jager":  [true,false,false,false,false,false,true,false,true,true]
+    "MrBeast":[true,false,true,true,true,false,false,false,false,true],
+    "Kylie Jenner":[false,false,true,false,true,true,true,false,true,true],
+    "Charli D'Amelio":[false,false,true,false,true,false,false,false,true,true],
+    "PewDiePie":[true,true,false,true,true,false,true,false,true,false],
+    "Khaby Lame":[false,true,false,true,true,false,false,false,false,true],
+    "Zach King":[false,false,true,true,false,false,true,false,false,false],
+    "Addison Rae":[false,false,true,false,false,true,false,false,false,true],
+    "Squeezie":[true,true,false,true,false,false,false,false,false,true],
+    "Emma Chamberlain":[true,false,true,false,false,false,false,false,false,true],
+    "James Charles":[true,false,true,true,false,false,false,false,true,true],
+    "Logan Paul":[true,false,true,true,false,true,true,false,true,true],
+    "Huda Kattan":[false,false,true,false,false,false,true,false,false,true],
+    "Casey Neistat":[true,false,true,true,false,false,true,false,false,true],
+    "Liza Koshy":[true,false,true,false,false,true,true,false,false,false],
+    "Amouranth":[false,true,true,false,false,false,false,false,true,true],
+    "Dylan Mulvaney":[false,false,true,false,false,false,false,false,true,false],
+    "Inoxtag":[true,true,false,true,false,false,false,false,false,false],
+    "Michelle Phan":[true,false,true,false,false,false,true,false,false,true],
+    "Marques Brownlee":[true,false,true,true,false,false,true,false,false,false],
+    "Nikkie de Jager":[true,false,false,false,false,false,true,false,true,true]
   }
 };
 
@@ -203,15 +291,26 @@ let state = {
   secrets:[null,null], pickingFor:0, currentPlayer:0,
   eliminated:new Set(), askedQs:new Set(),
   selectedQ:null, lastAnswer:null,
-  phase:"playing", finalGuess:null, loading:false
+  phase:"playing", finalGuess:null
 };
 
 function initials(n){ return n.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+
 function avatar(name, size=40){
   const d = document.createElement("div");
   d.className = "avatar";
   d.style.cssText = `width:${size}px;height:${size}px;font-size:${size*0.32}px;`;
-  d.textContent = initials(name);
+  const url = PHOTOS[name];
+  if(url){
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = name;
+    img.referrerPolicy = "no-referrer";
+    img.onerror = ()=>{ d.removeChild(img); d.textContent = initials(name); };
+    d.appendChild(img);
+  } else {
+    d.textContent = initials(name);
+  }
   return d;
 }
 
@@ -220,13 +319,10 @@ function getReponse(catId, personnage, qIndex){
 }
 
 function eliminateByAnswer(catId, qIndex, answer){
-  // élimine les personnages dont la réponse ne correspond pas à la réponse donnée
   const cat = CATS.find(c=>c.id===catId);
   cat.personnages.forEach(p=>{
     const rep = getReponse(catId, p, qIndex);
-    if(rep !== null && rep !== answer){
-      state.eliminated.add(p);
-    }
+    if(rep !== null && rep !== answer) state.eliminated.add(p);
   });
 }
 
@@ -283,7 +379,6 @@ function renderHome(app){
     state.lastAnswer = null;
     state.phase = "playing";
     state.finalGuess = null;
-    state.loading = false;
     if(state.mode==="solo"){
       const list = state.cat.personnages;
       state.secrets = [list[Math.floor(Math.random()*list.length)], null];
@@ -366,13 +461,12 @@ function renderGame(app){
   const cat = state.cat;
   const secret = state.secrets[state.currentPlayer];
 
-  // header
   const header = document.createElement("div");
   header.className = "header";
   header.innerHTML = `
     <button class="back-btn" id="btn-home">← Accueil</button>
     <span style="font-weight:700;font-size:14px">${cat.emoji} ${cat.nom}</span>
-    <span class="badge" id="badge-count">${cat.personnages.length - state.eliminated.size} restants</span>
+    <span class="badge">${cat.personnages.length - state.eliminated.size} restants</span>
   `;
   app.appendChild(header);
   header.querySelector("#btn-home").onclick = ()=>{ state.screen="home"; render(); };
@@ -384,7 +478,6 @@ function renderGame(app){
     app.appendChild(bar);
   }
 
-  // grille
   const grid = document.createElement("div");
   grid.className = "char-grid";
   cat.personnages.forEach(name=>{
@@ -405,13 +498,9 @@ function renderGame(app){
   });
   app.appendChild(grid);
 
-  // panel
   const panel = document.createElement("div");
   panel.className = "panel";
-
   if(state.phase==="playing"){
-
-    // dernière réponse
     if(state.lastAnswer){
       const bubble = document.createElement("div");
       bubble.className = `ai-bubble ${state.lastAnswer.rep?"oui":"non"}`;
@@ -422,94 +511,82 @@ function renderGame(app){
       panel.appendChild(bubble);
     }
 
-    if(state.loading){
-      const l = document.createElement("div");
-      l.className = "loading-text";
-      l.textContent = "⏳ Réponse en cours…";
-      panel.appendChild(l);
-    } else {
-      // liste des questions
-      const qlabel = document.createElement("div");
-      qlabel.className = "q-label";
-      qlabel.textContent = "Choisis une question :";
-      panel.appendChild(qlabel);
+    const qlabel = document.createElement("div");
+    qlabel.className = "q-label";
+    qlabel.textContent = "Choisis une question :";
+    panel.appendChild(qlabel);
 
-      const qlist = document.createElement("div");
-      qlist.className = "q-selector";
-      cat.questions.forEach((q,i)=>{
-        const asked = state.askedQs.has(i);
-        const btn = document.createElement("button");
-        btn.className = "q-option"+(state.selectedQ===i?" selected":"")+(asked?" asked":"");
-        btn.textContent = q;
-        btn.disabled = asked;
-        btn.onclick = ()=>{ if(!asked){ state.selectedQ=i; render(); } };
-        qlist.appendChild(btn);
-      });
-      panel.appendChild(qlist);
+    const qlist = document.createElement("div");
+    qlist.className = "q-selector";
+    cat.questions.forEach((q,i)=>{
+      const asked = state.askedQs.has(i);
+      const btn = document.createElement("button");
+      btn.className = "q-option"+(state.selectedQ===i?" selected":"")+(asked?" asked":"");
+      btn.textContent = q;
+      btn.disabled = asked;
+      btn.onclick = ()=>{ if(!asked){ state.selectedQ=i; render(); } };
+      qlist.appendChild(btn);
+    });
+    panel.appendChild(qlist);
 
-      // boutons réponse
-      if(state.selectedQ !== null){
-        const row = document.createElement("div");
-        row.className = "btn-row";
-        row.style.marginTop = "8px";
+    if(state.selectedQ !== null){
+      const row = document.createElement("div");
+      row.className = "btn-row";
+      row.style.marginTop = "8px";
 
-        if(state.mode==="solo"){
-          // en solo : bouton "Poser la question" → l'IA répond automatiquement
-          const askBtn = document.createElement("button");
-          askBtn.className = "btn btn-coral";
-          askBtn.style.flex = "1";
-          askBtn.textContent = "Poser la question";
-          askBtn.onclick = ()=>{
+      if(state.mode==="solo"){
+        const askBtn = document.createElement("button");
+        askBtn.className = "btn btn-coral";
+        askBtn.style.flex = "1";
+        askBtn.textContent = "Poser la question →";
+        askBtn.onclick = ()=>{
+          const qi = state.selectedQ;
+          const q = cat.questions[qi];
+          const rep = getReponse(cat.id, secret, qi);
+          state.askedQs.add(qi);
+          state.selectedQ = null;
+          if(rep !== null){
+            state.lastAnswer = { q, rep };
+            eliminateByAnswer(cat.id, qi, rep);
+          }
+          render();
+        };
+        row.appendChild(askBtn);
+      } else {
+        const labelEl = document.createElement("div");
+        labelEl.className = "q-label";
+        labelEl.textContent = "L'autre joueur répond :";
+        labelEl.style.marginBottom = "6px";
+        panel.appendChild(labelEl);
+
+        ["Oui","Non"].forEach(label=>{
+          const btn = document.createElement("button");
+          btn.className = "btn "+(label==="Oui"?"btn-coral":"btn-dark");
+          btn.textContent = label;
+          btn.onclick = ()=>{
             const qi = state.selectedQ;
             const q = cat.questions[qi];
-            const rep = getReponse(cat.id, secret, qi);
+            const rep = label==="Oui";
             state.askedQs.add(qi);
             state.selectedQ = null;
-            state.loading = false;
-            if(rep !== null){
-              state.lastAnswer = { q, rep };
-              eliminateByAnswer(cat.id, qi, rep);
-            }
+            state.lastAnswer = { q, rep };
+            eliminateByAnswer(cat.id, qi, rep);
             render();
           };
-          row.appendChild(askBtn);
-        } else {
-          // en multi : le joueur adverse répond
-          const label = document.createElement("div");
-          label.className = "q-label";
-          label.textContent = "L'autre joueur répond :";
-          label.style.marginBottom = "6px";
-          panel.appendChild(label);
+          row.appendChild(btn);
+        });
 
-          ["Oui","Non"].forEach(label=>{
-            const btn = document.createElement("button");
-            btn.className = "btn "+(label==="Oui"?"btn-coral":"btn-dark");
-            btn.textContent = label;
-            btn.onclick = ()=>{
-              const qi = state.selectedQ;
-              const q = cat.questions[qi];
-              const rep = label==="Oui";
-              state.askedQs.add(qi);
-              state.selectedQ = null;
-              state.lastAnswer = { q, rep };
-              eliminateByAnswer(cat.id, qi, rep);
-              render();
-            };
-            row.appendChild(btn);
-          });
-
-          const nsppBtn = document.createElement("button");
-          nsppBtn.className = "btn btn-outline";
-          nsppBtn.textContent = "Je sais pas";
-          nsppBtn.onclick = ()=>{
-            state.askedQs.add(state.selectedQ);
-            state.selectedQ = null;
-            render();
-          };
-          row.appendChild(nsppBtn);
-        }
-        panel.appendChild(row);
+        const nsppBtn = document.createElement("button");
+        nsppBtn.className = "btn btn-outline";
+        nsppBtn.textContent = "Je sais pas";
+        nsppBtn.onclick = ()=>{
+          state.askedQs.add(state.selectedQ);
+          state.selectedQ = null;
+          render();
+        };
+        row.appendChild(nsppBtn);
       }
+      panel.appendChild(row);
     }
 
     const guessBtn = document.createElement("button");
@@ -550,11 +627,12 @@ function renderGame(app){
   else if(state.phase==="result"){
     const won = state.finalGuess === secret;
     const res = document.createElement("div");
-    res.className = "result";
     res.innerHTML = `
-      <div style="font-size:44px;margin-bottom:8px">${won?"🎉":"😅"}</div>
-      <div style="font-size:20px;font-weight:900;margin-bottom:6px">${won?"Bravo !":"Pas tout à fait…"}</div>
-      <div style="font-size:14px;color:rgba(245,243,237,0.55);margin-bottom:18px">Le personnage était <strong style="color:#F4C95D">${secret}</strong></div>
+      <div style="text-align:center">
+        <div style="font-size:44px;margin-bottom:8px">${won?"🎉":"😅"}</div>
+        <div style="font-size:20px;font-weight:900;margin-bottom:6px">${won?"Bravo !":"Pas tout à fait…"}</div>
+        <div style="font-size:14px;color:rgba(245,243,237,0.55);margin-bottom:18px">Le personnage était <strong style="color:#F4C95D">${secret}</strong></div>
+      </div>
     `;
     if(state.mode==="multi" && state.currentPlayer===0){
       const btn = document.createElement("button");
