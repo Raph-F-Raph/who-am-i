@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Am I?</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #14162B; color: #F5F3ED; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .app { max-width: 430px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  .app.game { height: 100vh; overflow: hidden; }
+  .header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(245,243,237,0.08); flex-shrink: 0; }
+  .back-btn { background: none; border: none; color: rgba(245,243,237,0.45); font-size: 13px; cursor: pointer; padding: 0; }
+  .badge { background: rgba(244,201,93,0.15); color: #F4C95D; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .home { padding: 32px 20px; display: flex; flex-direction: column; gap: 28px; }
+  .home h1 { font-size: 36px; font-weight: 900; line-height: 1.1; margin-top: 6px; }
+  .label { font-size: 12px; color: rgba(245,243,237,0.4); font-weight: 600; margin-bottom: 10px; }
+  .mode-row { display: flex; gap: 10px; }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cat-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 14px; padding: 18px 14px; text-align: left; cursor: pointer; color: #F5F3ED; }
+  .cat-card.active { border-color: #FF6B4A; }
+  .cat-emoji { font-size: 26px; }
+  .cat-name { margin-top: 8px; font-weight: 700; font-size: 14px; }
+  .btn { flex: 1; padding: 14px 0; border-radius: 12px; border: none; font-weight: 800; font-size: 15px; cursor: pointer; }
+  .btn-coral { background: #FF6B4A; color: #14162B; }
+  .btn-dark { background: rgba(245,243,237,0.06); color: #F5F3ED; border: 1px solid rgba(245,243,237,0.12); }
+  .btn-outline { background: transparent; color: rgba(245,243,237,0.45); border: 1px solid rgba(245,243,237,0.1); font-size: 12px !important; }
+  .btn-gold { background: transparent; color: #F4C95D; border: 1px solid rgba(244,201,93,0.3); width: 100%; padding: 12px 0; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px; }
+  .btn-full { width: 100%; padding: 17px 0; border-radius: 12px; border: none; font-weight: 800; font-size: 17px; cursor: pointer; }
+  .btn-disabled { background: rgba(245,243,237,0.08); color: rgba(245,243,237,0.25); cursor: default; }
+  .btn-row { display: flex; gap: 8px; }
+  .avatar { border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 800; background: #FF6B4A; color: #14162B; }
+  .pick-screen { padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; }
+  .pick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 420px; overflow-y: auto; }
+  .pick-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 14px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F5F3ED; text-align: left; }
+  .pick-card.active { border-color: #FF6B4A; }
+  .char-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 0; }
+  .char-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 14px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F5F3ED; text-align: left; transition: opacity 0.2s; }
+  .char-card.out { opacity: 0.25; }
+  .char-name { font-size: 12px; font-weight: 600; }
+  .char-name.out { text-decoration: line-through; color: rgba(245,243,237,0.3); }
+  .panel { padding: 14px 20px 22px; border-top: 1px solid rgba(245,243,237,0.08); background: #181A34; flex-shrink: 0; }
+  .q-label { font-size: 12px; color: rgba(245,243,237,0.4); margin-bottom: 8px; }
+  .q-selector { display: flex; flex-direction: column; gap: 5px; max-height: 120px; overflow-y: auto; margin-bottom: 10px; }
+  .q-option { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 10px; padding: 9px 12px; font-size: 12px; font-weight: 600; color: #F5F3ED; cursor: pointer; text-align: left; width: 100%; }
+  .q-option.selected { border-color: #FF6B4A; background: rgba(255,107,74,0.1); }
+  .q-option.asked { opacity: 0.35; cursor: default; }
+  .q-selected { font-size: 15px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; color: #F5F3ED; }
+  .ai-bubble { border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; text-align: center; }
+  .ai-bubble.oui { background: rgba(76,217,100,0.12); border: 1px solid rgba(76,217,100,0.3); }
+  .ai-bubble.non { background: rgba(255,107,74,0.12); border: 1px solid rgba(255,107,74,0.3); }
+  .ai-answer { font-size: 18px; font-weight: 900; }
+  .ai-answer.oui { color: #4CD964; }
+  .ai-answer.non { color: #FF6B4A; }
+  .ai-sub { font-size: 11px; color: rgba(245,243,237,0.4); margin-top: 3px; }
+  .handoff { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px; text-align: center; gap: 20px; }
+  .handoff h2 { font-size: 24px; font-weight: 900; }
+  .result { text-align: center; }
+  .guess-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .guess-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F5F3ED; text-align: left; }
+  .back-q { width: 100%; padding: 10px 0; border-radius: 12px; border: 1px solid rgba(245,243,237,0.1); background: transparent; color: rgba(245,243,237,0.45); font-weight: 600; font-size: 13px; cursor: pointer; margin-top: 8px; }
+  .loading-text { text-align: center; color: rgba(245,243,237,0.4); font-size: 14px; padding: 12px 0; }
+  .player-bar { padding: 7px 20px; background: rgba(255,107,74,0.1); font-size: 13px; color: #FF6B4A; font-weight: 700; text-align: center; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const CATS = [
+  { id:"sportifs", nom:"Sportifs", emoji:"⚽",
+    questions:["Sport individuel (pas collectif) ?","A gagné une médaille olympique ?","Nationalité européenne ?","Homme ?","Encore actif ?","A plus de 30 ans ?","Footballeur ?","Tennisman/Tenniswoman ?","Nageur/Nageuse ?","A un surnom très connu ?"],
+    personnages:["Lionel Messi","Cristiano Ronaldo","Serena Williams","LeBron James","Usain Bolt","Michael Jordan","Simone Biles","Rafael Nadal","Kylian Mbappé","Naomi Osaka","Novak Djokovic","Muhammad Ali","Megan Rapinoe","Michael Phelps","Neymar","Katie Ledecky","Neisser Loyola","Désiré Doué","Léon Marchand","Femke Bol"] },
+  { id:"acteurs", nom:"Acteurs", emoji:"🎬",
+    questions:["A gagné un Oscar ou équivalent ?","Plus connu au cinéma qu'en série ?","Américain(e) ?","Homme ?","Carrière avant les années 2000 ?","Joue dans des super-héros / franchises ?","A plus de 50 ans ?","A joué un méchant marquant ?","Connu(e) pour autre chose que le jeu d'acteur ?","Originaire d'un pays anglophone ?"],
+    personnages:["Leonardo DiCaprio","Meryl Streep","Denzel Washington","Scarlett Johansson","Tom Hanks","Angelina Jolie","Robert Downey Jr.","Zendaya","Brad Pitt","Emma Watson","Will Smith","Penélope Cruz","Morgan Freeman","Marion Cotillard","Dwayne Johnson","Charlize Theron","Idris Elba","Natalie Portman","Song Kang-ho","Tom Holland"] },
+  { id:"politiques", nom:"Politiques", emoji:"🏛️",
+    questions:["Encore en vie ?","En exercice aujourd'hui ?","Chef d'État (président, roi…) ?","Personnage avant 1990 ?","Homme ?","A remporté un prix Nobel ?","Impliqué dans un scandale médiatisé ?","A plus de 60 ans ?","Décédé(e) ?","Nationalité européenne ?"],
+    personnages:["Barack Obama","Angela Merkel","Nelson Mandela","Winston Churchill","Emmanuel Macron","Vladimir Poutine","Margaret Thatcher","Xi Jinping","Mahatma Gandhi","Donald Trump","Justin Trudeau","Indira Gandhi","Charles de Gaulle","Jacinda Ardern","Fidel Castro","Golda Meir","Volodymyr Zelensky","Franklin D. Roosevelt","Kamala Harris","Benazir Bhutto"] },
+  { id:"musiciens", nom:"Musiciens", emoji:"🎵",
+    questions:["Genre pop ou R&B ?","Solo (pas un groupe) ?","Nationalité européenne ?","Homme ?","Chante en français ?","Percée avant 2010 ?","Joue d'un instrument sur scène ?","A plus de 40 ans ?","A remporté un Grammy ?","Encore en activité aujourd'hui ?"],
+    personnages:["Beyoncé","Ed Sheeran","Rihanna","Drake","Taylor Swift","The Weeknd","Adele","Bad Bunny","Freddie Mercury","Michael Jackson","Céline Dion","Bruno Mars","BTS","Elton John","Shakira","Eminem","Billie Eilish","Bob Marley","Ariana Grande","Stromae"] },
+  { id:"influenceurs", nom:"Créateurs", emoji:"📱",
+    questions:["Plateforme principale YouTube ?","Contenu humour ou gaming ?","Nationalité américaine ?","Homme ?","Plus de 50 millions d'abonnés ?","Fait aussi de la télé ou cinéma ?","A commencé avant 2015 ?","Fait du contenu en équipe ?","A eu une polémique publique ?","A une marque à son nom ?"],
+    personnages:["MrBeast","Kylie Jenner","Charli D'Amelio","PewDiePie","Khaby Lame","Zach King","Addison Rae","Squeezie","Emma Chamberlain","James Charles","Logan Paul","Huda Kattan","Casey Neistat","Liza Koshy","Amouranth","Dylan Mulvaney","Inoxtag","Michelle Phan","Marques Brownlee","Nikkie de Jager"] }
+];
+
+// Réponses pré-définies : CATS[i].reponses[personnage][qIndex] = true/false
+const REPONSES = {
+  sportifs: {
+    "Lionel Messi":        [false,true,false,true,true,true,true,false,false,true],
+    "Cristiano Ronaldo":   [false,false,true,true,true,true,true,false,false,true],
+    "Serena Williams":     [true,true,false,false,false,true,false,true,false,false],
+    "LeBron James":        [false,true,false,true,true,true,false,false,false,true],
+    "Usain Bolt":          [true,true,false,true,false,true,false,false,false,true],
+    "Michael Jordan":      [false,true,false,true,false,true,false,false,false,true],
+    "Simone Biles":        [true,true,false,false,true,false,false,false,false,false],
+    "Rafael Nadal":        [true,true,true,true,false,true,false,true,false,true],
+    "Kylian Mbappé":       [false,false,true,true,true,false,true,false,false,false],
+    "Naomi Osaka":         [true,false,false,false,true,false,false,true,false,false],
+    "Novak Djokovic":      [true,true,true,true,true,true,false,true,false,true],
+    "Muhammad Ali":        [true,true,false,true,false,true,false,false,false,true],
+    "Megan Rapinoe":       [false,true,false,false,false,true,true,false,false,false],
+    "Michael Phelps":      [true,true,false,true,false,true,false,false,true,true],
+    "Neymar":              [false,true,false,true,true,true,true,false,false,false],
+    "Katie Ledecky":       [true,true,false,false,true,false,false,false,true,false],
+    "Neisser Loyola":      [true,false,false,true,true,false,false,false,false,false],
+    "Désiré Doué":         [false,false,true,true,true,false,true,false,false,false],
+    "Léon Marchand":       [true,true,true,true,true,false,false,false,true,false],
+    "Femke Bol":           [true,true,true,false,true,false,false,false,false,false]
+  },
+  acteurs: {
+    "Leonardo DiCaprio":   [true,true,true,true,true,false,true,false,false,true],
+    "Meryl Streep":        [true,true,true,false,true,false,true,false,false,true],
+    "Denzel Washington":   [true,true,true,true,true,false,true,true,false,true],
+    "Scarlett Johansson":  [false,true,true,false,false,false,false,false,false,true],
+    "Tom Hanks":           [true,true,true,true,true,false,true,false,false,true],
+    "Angelina Jolie":      [true,true,true,false,true,false,true,false,true,true],
+    "Robert Downey Jr.":   [true,true,true,true,true,false,true,false,false,true],
+    "Zendaya":             [false,true,true,false,false,false,false,false,false,true],
+    "Brad Pitt":           [true,true,true,true,true,false,true,false,false,true],
+    "Emma Watson":         [false,true,false,false,true,false,false,false,true,true],
+    "Will Smith":          [true,true,true,true,true,false,true,false,false,true],
+    "Penélope Cruz":       [true,true,false,false,true,false,true,false,false,false],
+    "Morgan Freeman":      [true,true,true,true,true,false,true,false,false,true],
+    "Marion Cotillard":    [true,true,false,false,true,false,true,false,false,false],
+    "Dwayne Johnson":      [false,true,true,true,true,false,true,false,true,true],
+    "Charlize Theron":     [true,true,false,false,true,false,true,true,false,false],
+    "Idris Elba":          [false,false,false,true,true,false,true,true,false,true],
+    "Natalie Portman":     [true,true,true,false,true,false,false,false,false,true],
+    "Song Kang-ho":        [false,true,false,true,true,false,true,false,false,false],
+    "Tom Holland":         [false,true,false,true,false,false,false,false,false,true]
+  },
+  politiques: {
+    "Barack Obama":        [true,false,false,false,true,true,false,true,false,false],
+    "Angela Merkel":       [true,false,false,false,false,false,false,true,false,true],
+    "Nelson Mandela":      [false,false,false,false,true,true,false,true,true,false],
+    "Winston Churchill":   [false,false,true,true,true,false,false,true,true,true],
+    "Emmanuel Macron":     [true,true,false,false,true,false,false,false,false,true],
+    "Vladimir Poutine":    [true,true,false,false,true,false,true,true,false,false],
+    "Margaret Thatcher":   [false,false,true,true,false,false,false,true,true,true],
+    "Xi Jinping":          [true,true,false,false,true,false,false,true,false,false],
+    "Mahatma Gandhi":      [false,false,true,true,true,false,false,true,true,false],
+    "Donald Trump":        [true,true,false,false,true,false,true,true,false,false],
+    "Justin Trudeau":      [true,false,false,false,true,false,false,false,false,false],
+    "Indira Gandhi":       [false,false,true,true,false,false,false,true,true,false],
+    "Charles de Gaulle":   [false,false,true,true,true,false,false,true,true,true],
+    "Jacinda Ardern":      [true,false,false,false,false,false,false,false,false,false],
+    "Fidel Castro":        [false,false,true,true,true,false,true,true,true,false],
+    "Golda Meir":          [false,false,true,true,false,false,false,true,true,false],
+    "Volodymyr Zelensky":  [true,true,false,false,true,false,false,false,false,true],
+    "Franklin D. Roosevelt":[false,false,true,true,true,false,false,true,true,false],
+    "Kamala Harris":       [true,false,false,false,false,false,false,false,false,false],
+    "Benazir Bhutto":      [false,false,true,true,false,false,true,true,true,false]
+  },
+  musiciens: {
+    "Beyoncé":       [true,true,false,false,false,true,false,true,true,true],
+    "Ed Sheeran":    [true,true,true,true,false,false,true,false,true,true],
+    "Rihanna":       [true,true,false,false,false,true,false,false,true,true],
+    "Drake":         [false,true,false,true,false,false,false,false,true,true],
+    "Taylor Swift":  [true,true,false,false,false,true,true,false,true,true],
+    "The Weeknd":    [true,true,false,true,false,false,false,false,true,true],
+    "Adele":         [true,true,true,false,false,false,false,false,true,true],
+    "Bad Bunny":     [false,true,false,true,false,false,false,false,true,true],
+    "Freddie Mercury":[false,false,true,true,false,true,true,true,true,false],
+    "Michael Jackson":[true,true,false,true,false,true,false,true,true,false],
+    "Céline Dion":   [true,true,false,false,true,true,false,true,true,true],
+    "Bruno Mars":    [true,true,false,true,false,false,true,false,true,true],
+    "BTS":           [false,false,false,true,false,false,false,false,true,true],
+    "Elton John":    [false,false,true,true,false,true,true,true,true,true],
+    "Shakira":       [true,true,false,false,false,true,false,true,true,true],
+    "Eminem":        [false,true,false,true,false,true,false,true,true,true],
+    "Billie Eilish": [true,true,false,false,false,false,false,false,true,true],
+    "Bob Marley":    [false,false,false,true,false,true,true,true,false,false],
+    "Ariana Grande": [true,true,false,false,false,false,false,false,true,true],
+    "Stromae":       [false,true,true,true,true,false,false,false,false,true]
+  },
+  influenceurs: {
+    "MrBeast":          [true,false,true,true,true,false,false,false,false,true],
+    "Kylie Jenner":     [false,false,true,false,true,true,true,false,true,true],
+    "Charli D'Amelio":  [false,false,true,false,true,false,false,false,true,true],
+    "PewDiePie":        [true,true,false,true,true,false,true,false,true,false],
+    "Khaby Lame":       [false,true,false,true,true,false,false,false,false,true],
+    "Zach King":        [false,false,true,true,false,false,true,false,false,false],
+    "Addison Rae":      [false,false,true,false,false,true,false,false,false,true],
+    "Squeezie":         [true,true,false,true,false,false,false,false,false,true],
+    "Emma Chamberlain": [true,false,true,false,false,false,false,false,false,true],
+    "James Charles":    [true,false,true,true,false,false,false,false,true,true],
+    "Logan Paul":       [true,false,true,true,false,true,true,false,true,true],
+    "Huda Kattan":      [false,false,true,false,false,false,true,false,false,true],
+    "Casey Neistat":    [true,false,true,true,false,false,true,false,false,true],
+    "Liza Koshy":       [true,false,true,false,false,true,true,false,false,false],
+    "Amouranth":        [false,true,true,false,false,false,false,false,true,true],
+    "Dylan Mulvaney":   [false,false,true,false,false,false,false,false,true,false],
+    "Inoxtag":          [true,true,false,true,false,false,false,false,false,false],
+    "Michelle Phan":    [true,false,true,false,false,false,true,false,false,true],
+    "Marques Brownlee": [true,false,true,true,false,false,true,false,false,false],
+    "Nikkie de Jager":  [true,false,false,false,false,false,true,false,true,true]
+  }
+};
+
+let state = {
+  screen:"home", mode:"solo", cat:null,
+  secrets:[null,null], pickingFor:0, currentPlayer:0,
+  eliminated:new Set(), askedQs:new Set(),
+  selectedQ:null, lastAnswer:null,
+  phase:"playing", finalGuess:null, loading:false
+};
+
+function initials(n){ return n.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+function avatar(name, size=40){
+  const d = document.createElement("div");
+  d.className = "avatar";
+  d.style.cssText = `width:${size}px;height:${size}px;font-size:${size*0.32}px;`;
+  d.textContent = initials(name);
+  return d;
+}
+
+function getReponse(catId, personnage, qIndex){
+  return REPONSES[catId]?.[personnage]?.[qIndex] ?? null;
+}
+
+function eliminateByAnswer(catId, qIndex, answer){
+  // élimine les personnages dont la réponse ne correspond pas à la réponse donnée
+  const cat = CATS.find(c=>c.id===catId);
+  cat.personnages.forEach(p=>{
+    const rep = getReponse(catId, p, qIndex);
+    if(rep !== null && rep !== answer){
+      state.eliminated.add(p);
+    }
+  });
+}
+
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+  app.className = state.screen==="game" ? "app game" : "app";
+  if(state.screen==="home") renderHome(app);
+  else if(state.screen==="handoff") renderHandoff(app);
+  else if(state.screen==="pick") renderPick(app);
+  else if(state.screen==="game") renderGame(app);
+}
+
+function renderHome(app){
+  const div = document.createElement("div");
+  div.className = "home";
+  div.innerHTML = `
+    <div>
+      <div style="font-size:13px;color:#FF6B4A;font-weight:700;letter-spacing:1px">NOUVELLE PARTIE</div>
+      <h1>Who Am I?</h1>
+      <p style="margin-top:8px;color:rgba(245,243,237,0.5);font-size:15px;line-height:1.5">Devine la célébrité choisie par ton adversaire.</p>
+    </div>
+    <div>
+      <div class="label">MODE DE JEU</div>
+      <div class="mode-row">
+        <button class="btn ${state.mode==='solo'?'btn-coral':'btn-dark'}" id="btn-solo">🤖 Solo</button>
+        <button class="btn ${state.mode==='multi'?'btn-coral':'btn-dark'}" id="btn-multi">👥 Multijoueur</button>
+      </div>
+    </div>
+    <div>
+      <div class="label">CATÉGORIE</div>
+      <div class="cat-grid" id="cat-grid"></div>
+    </div>
+    <button class="btn-full ${state.cat?'btn-coral':'btn-disabled'}" id="btn-start">
+      ${state.cat?`Jouer — ${state.cat.nom}`:"Choisis une catégorie"}
+    </button>
+  `;
+  app.appendChild(div);
+  div.querySelector("#btn-solo").onclick = ()=>{ state.mode="solo"; render(); };
+  div.querySelector("#btn-multi").onclick = ()=>{ state.mode="multi"; render(); };
+  const grid = div.querySelector("#cat-grid");
+  CATS.forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "cat-card"+(state.cat?.id===c.id?" active":"");
+    btn.innerHTML = `<div class="cat-emoji">${c.emoji}</div><div class="cat-name">${c.nom}</div>`;
+    btn.onclick = ()=>{ state.cat=c; render(); };
+    grid.appendChild(btn);
+  });
+  div.querySelector("#btn-start").onclick = ()=>{
+    if(!state.cat) return;
+    state.eliminated = new Set();
+    state.askedQs = new Set();
+    state.selectedQ = null;
+    state.lastAnswer = null;
+    state.phase = "playing";
+    state.finalGuess = null;
+    state.loading = false;
+    if(state.mode==="solo"){
+      const list = state.cat.personnages;
+      state.secrets = [list[Math.floor(Math.random()*list.length)], null];
+      state.currentPlayer = 0;
+      state.screen = "game";
+    } else {
+      state.pickingFor = 0;
+      state.secrets = [null,null];
+      state.screen = "handoff";
+    }
+    render();
+  };
+}
+
+function renderHandoff(app){
+  const div = document.createElement("div");
+  div.className = "handoff";
+  div.innerHTML = `
+    <div style="font-size:56px">🙈</div>
+    <h2>Passe l'appareil<br>au Joueur ${state.pickingFor+1}</h2>
+    <p style="color:rgba(245,243,237,0.5);font-size:14px;line-height:1.6">L'autre joueur doit regarder ailleurs<br>pendant le choix du personnage secret.</p>
+    <button class="btn btn-coral" style="max-width:240px" id="btn-ready">Je suis prêt(e) !</button>
+  `;
+  app.appendChild(div);
+  div.querySelector("#btn-ready").onclick = ()=>{ state.screen="pick"; render(); };
+}
+
+function renderPick(app){
+  const div = document.createElement("div");
+  div.className = "pick-screen";
+  div.innerHTML = `
+    <div>
+      <div style="font-size:13px;color:#FF6B4A;font-weight:700">JOUEUR ${state.pickingFor+1}</div>
+      <h2 style="margin-top:4px;font-size:22px;font-weight:800">Choisis le personnage secret de ton adversaire</h2>
+    </div>
+    <div class="pick-grid" id="pick-grid"></div>
+    <button class="btn-full btn-disabled" id="btn-confirm">Confirmer</button>
+  `;
+  app.appendChild(div);
+  let chosen = null;
+  const grid = div.querySelector("#pick-grid");
+  const confirmBtn = div.querySelector("#btn-confirm");
+  state.cat.personnages.forEach(name=>{
+    const card = document.createElement("button");
+    card.className = "pick-card";
+    card.appendChild(avatar(name,34));
+    const span = document.createElement("span");
+    span.style.cssText = "font-size:12px;font-weight:600;";
+    span.textContent = name;
+    card.appendChild(span);
+    card.onclick = ()=>{
+      chosen = name;
+      grid.querySelectorAll(".pick-card").forEach(c=>c.classList.remove("active"));
+      card.classList.add("active");
+      confirmBtn.className = "btn-full btn-coral";
+    };
+    grid.appendChild(card);
+  });
+  confirmBtn.onclick = ()=>{
+    if(!chosen) return;
+    state.secrets[state.pickingFor] = chosen;
+    if(state.pickingFor===0){
+      state.pickingFor = 1;
+      state.screen = "handoff";
+    } else {
+      state.currentPlayer = 0;
+      state.eliminated = new Set();
+      state.askedQs = new Set();
+      state.selectedQ = null;
+      state.lastAnswer = null;
+      state.phase = "playing";
+      state.finalGuess = null;
+      state.screen = "game";
+    }
+    render();
+  };
+}
+
+function renderGame(app){
+  const cat = state.cat;
+  const secret = state.secrets[state.currentPlayer];
+
+  // header
+  const header = document.createElement("div");
+  header.className = "header";
+  header.innerHTML = `
+    <button class="back-btn" id="btn-home">← Accueil</button>
+    <span style="font-weight:700;font-size:14px">${cat.emoji} ${cat.nom}</span>
+    <span class="badge" id="badge-count">${cat.personnages.length - state.eliminated.size} restants</span>
+  `;
+  app.appendChild(header);
+  header.querySelector("#btn-home").onclick = ()=>{ state.screen="home"; render(); };
+
+  if(state.mode==="multi"){
+    const bar = document.createElement("div");
+    bar.className = "player-bar";
+    bar.textContent = `Joueur ${state.currentPlayer+1} — devine le personnage de l'autre`;
+    app.appendChild(bar);
+  }
+
+  // grille
+  const grid = document.createElement("div");
+  grid.className = "char-grid";
+  cat.personnages.forEach(name=>{
+    const out = state.eliminated.has(name);
+    const card = document.createElement("button");
+    card.className = "char-card"+(out?" out":"");
+    card.appendChild(avatar(name,36));
+    const span = document.createElement("span");
+    span.className = "char-name"+(out?" out":"");
+    span.textContent = name;
+    card.appendChild(span);
+    card.onclick = ()=>{
+      if(state.eliminated.has(name)) state.eliminated.delete(name);
+      else state.eliminated.add(name);
+      render();
+    };
+    grid.appendChild(card);
+  });
+  app.appendChild(grid);
+
+  // panel
+  const panel = document.createElement("div");
+  panel.className = "panel";
+
+  if(state.phase==="playing"){
+
+    // dernière réponse
+    if(state.lastAnswer){
+      const bubble = document.createElement("div");
+      bubble.className = `ai-bubble ${state.lastAnswer.rep?"oui":"non"}`;
+      bubble.innerHTML = `
+        <div class="ai-answer ${state.lastAnswer.rep?"oui":"non"}">${state.lastAnswer.rep?"✅ OUI":"❌ NON"}</div>
+        <div class="ai-sub">${state.lastAnswer.q}</div>
+      `;
+      panel.appendChild(bubble);
+    }
+
+    if(state.loading){
+      const l = document.createElement("div");
+      l.className = "loading-text";
+      l.textContent = "⏳ Réponse en cours…";
+      panel.appendChild(l);
+    } else {
+      // liste des questions
+      const qlabel = document.createElement("div");
+      qlabel.className = "q-label";
+      qlabel.textContent = "Choisis une question :";
+      panel.appendChild(qlabel);
+
+      const qlist = document.createElement("div");
+      qlist.className = "q-selector";
+      cat.questions.forEach((q,i)=>{
+        const asked = state.askedQs.has(i);
+        const btn = document.createElement("button");
+        btn.className = "q-option"+(state.selectedQ===i?" selected":"")+(asked?" asked":"");
+        btn.textContent = q;
+        btn.disabled = asked;
+        btn.onclick = ()=>{ if(!asked){ state.selectedQ=i; render(); } };
+        qlist.appendChild(btn);
+      });
+      panel.appendChild(qlist);
+
+      // boutons réponse
+      if(state.selectedQ !== null){
+        const row = document.createElement("div");
+        row.className = "btn-row";
+        row.style.marginTop = "8px";
+
+        if(state.mode==="solo"){
+          // en solo : bouton "Poser la question" → l'IA répond automatiquement
+          const askBtn = document.createElement("button");
+          askBtn.className = "btn btn-coral";
+          askBtn.style.flex = "1";
+          askBtn.textContent = "Poser la question";
+          askBtn.onclick = ()=>{
+            const qi = state.selectedQ;
+            const q = cat.questions[qi];
+            const rep = getReponse(cat.id, secret, qi);
+            state.askedQs.add(qi);
+            state.selectedQ = null;
+            state.loading = false;
+            if(rep !== null){
+              state.lastAnswer = { q, rep };
+              eliminateByAnswer(cat.id, qi, rep);
+            }
+            render();
+          };
+          row.appendChild(askBtn);
+        } else {
+          // en multi : le joueur adverse répond
+          const label = document.createElement("div");
+          label.className = "q-label";
+          label.textContent = "L'autre joueur répond :";
+          label.style.marginBottom = "6px";
+          panel.appendChild(label);
+
+          ["Oui","Non"].forEach(label=>{
+            const btn = document.createElement("button");
+            btn.className = "btn "+(label==="Oui"?"btn-coral":"btn-dark");
+            btn.textContent = label;
+            btn.onclick = ()=>{
+              const qi = state.selectedQ;
+              const q = cat.questions[qi];
+              const rep = label==="Oui";
+              state.askedQs.add(qi);
+              state.selectedQ = null;
+              state.lastAnswer = { q, rep };
+              eliminateByAnswer(cat.id, qi, rep);
+              render();
+            };
+            row.appendChild(btn);
+          });
+
+          const nsppBtn = document.createElement("button");
+          nsppBtn.className = "btn btn-outline";
+          nsppBtn.textContent = "Je sais pas";
+          nsppBtn.onclick = ()=>{
+            state.askedQs.add(state.selectedQ);
+            state.selectedQ = null;
+            render();
+          };
+          row.appendChild(nsppBtn);
+        }
+        panel.appendChild(row);
+      }
+    }
+
+    const guessBtn = document.createElement("button");
+    guessBtn.className = "btn-gold";
+    guessBtn.textContent = "🎯 Deviner le personnage";
+    guessBtn.onclick = ()=>{ state.phase="guessing"; render(); };
+    panel.appendChild(guessBtn);
+  }
+
+  else if(state.phase==="guessing"){
+    const title = document.createElement("div");
+    title.style.cssText = "font-size:15px;font-weight:700;margin-bottom:10px;";
+    title.textContent = "Qui est-ce selon toi ?";
+    panel.appendChild(title);
+
+    const list = document.createElement("div");
+    list.className = "guess-list";
+    cat.personnages.filter(n=>!state.eliminated.has(n)).forEach(name=>{
+      const card = document.createElement("button");
+      card.className = "guess-card";
+      card.appendChild(avatar(name,32));
+      const span = document.createElement("span");
+      span.style.cssText = "font-size:13px;font-weight:600;";
+      span.textContent = name;
+      card.appendChild(span);
+      card.onclick = ()=>{ state.finalGuess=name; state.phase="result"; render(); };
+      list.appendChild(card);
+    });
+    panel.appendChild(list);
+
+    const backBtn = document.createElement("button");
+    backBtn.className = "back-q";
+    backBtn.textContent = "← Continuer à poser des questions";
+    backBtn.onclick = ()=>{ state.phase="playing"; render(); };
+    panel.appendChild(backBtn);
+  }
+
+  else if(state.phase==="result"){
+    const won = state.finalGuess === secret;
+    const res = document.createElement("div");
+    res.className = "result";
+    res.innerHTML = `
+      <div style="font-size:44px;margin-bottom:8px">${won?"🎉":"😅"}</div>
+      <div style="font-size:20px;font-weight:900;margin-bottom:6px">${won?"Bravo !":"Pas tout à fait…"}</div>
+      <div style="font-size:14px;color:rgba(245,243,237,0.55);margin-bottom:18px">Le personnage était <strong style="color:#F4C95D">${secret}</strong></div>
+    `;
+    if(state.mode==="multi" && state.currentPlayer===0){
+      const btn = document.createElement("button");
+      btn.className = "btn-full btn-coral";
+      btn.textContent = "Tour du Joueur 2 →";
+      btn.onclick = ()=>{
+        state.currentPlayer = 1;
+        state.eliminated = new Set();
+        state.askedQs = new Set();
+        state.selectedQ = null;
+        state.lastAnswer = null;
+        state.phase = "playing";
+        state.finalGuess = null;
+        render();
+      };
+      res.appendChild(btn);
+    } else {
+      const btn = document.createElement("button");
+      btn.className = "btn-full btn-coral";
+      btn.textContent = "Rejouer";
+      btn.onclick = ()=>{ state.screen="home"; render(); };
+      res.appendChild(btn);
+    }
+    panel.appendChild(res);
+  }
+
+  app.appendChild(panel);
+}
+
+render();
+</script>
+</body>
+</html>
