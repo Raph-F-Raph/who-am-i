@@ -24,6 +24,15 @@
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .cat-card { background: #1F2242; border: 1px solid rgba(245,243,237,0.08); border-radius: 14px; padding: 18px 14px; text-align: left; cursor: pointer; color: #F5F3ED; }
   .cat-card.active { border-color: #FF6B4A; }
+  .cat-card.locked { opacity: 0.7; position: relative; }
+  .cat-lock { position: absolute; top: 10px; right: 10px; font-size: 14px; }
+  .cat-price { font-size: 11px; color: #F4C95D; margin-top: 4px; font-weight: 700; }
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .modal { background: #1F2242; border-radius: 20px; padding: 28px 24px; text-align: center; max-width: 320px; width: 100%; }
+  .modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .modal p { color: rgba(245,243,237,0.6); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+  .modal-price { font-size: 28px; font-weight: 900; color: #F4C95D; margin-bottom: 20px; }
+  .modal-close { background: none; border: 1px solid rgba(245,243,237,0.15); color: rgba(245,243,237,0.5); padding: 10px 0; border-radius: 10px; width: 100%; font-size: 14px; cursor: pointer; margin-top: 8px; }
   .cat-emoji { font-size: 26px; }
   .cat-name { margin-top: 8px; font-weight: 700; font-size: 14px; }
   .btn { flex: 1; padding: 14px 0; border-radius: 12px; border: none; font-weight: 800; font-size: 15px; cursor: pointer; }
@@ -171,6 +180,12 @@ const PHOTOS = {
   "Nikkie de Jager":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/NikkiedeJager2020-2.jpg/500px-NikkiedeJager2020-2.jpg"
 };
 
+const CATS_PAYANTES = [
+  { id:"fictifs", nom:"Personnages fictifs", emoji:"🎭", questions:["Tiré d'un film, série ou livre ?","Personnage principal ?","Héros ou méchant ?","Humain ?","Univers fantastique/SF ?","Personnage animé ?","A des super-pouvoirs ?","Apparu avant 2000 ?","Existe dans une franchise ?","Connu par les enfants ?"], personnages:["Sherlock Holmes","Dracula","James Bond","Hermione Granger","Batman","Spider-Man","Joker","Elsa","Simba","Gandalf","Katniss Everdeen","Jack Sparrow","Tyrion Lannister","Walter White","Hannibal Lecter","Indiana Jones","Astérix","Tintin","Don Quichotte","Doraemon"] },
+  { id:"historiques", nom:"Personnages historiques", emoji:"🏛️", questions:["Continent européen ?","Après le XVIIIe siècle ?","Homme ?","Lié à une guerre ?","Dirigeant politique ?","A conquis un territoire ?","Mort de façon tragique ?","A révolutionné les sciences ou arts ?","Encore célébré aujourd'hui ?","Associé à un pays précis ?"], personnages:["Napoléon Bonaparte","Cléopâtre","Jules César","Alexandre le Grand","Jeanne d'Arc","Christophe Colomb","Leonardo da Vinci","Shakespeare","Mozart","Marco Polo","Gengis Khan","Vercingétorix","Marie-Antoinette","Sun Tzu","Galilée","Socrate","Attila","Élisabeth Ire","Bouddha","Marie Curie"] },
+  { id:"presentateurs", nom:"Présentateurs TV", emoji:"📺", questions:["Pays d'origine USA ?","Émission de divertissement ?","Homme ?","Encore actif ?","A plus de 50 ans ?","Connu internationalement ?","A présenté une émission culte ?","A aussi fait de la radio ?","A joué dans des films ?","Style/look très reconnaissable ?"], personnages:["Oprah Winfrey","Jimmy Fallon","Ellen DeGeneres","David Letterman","James Corden","Graham Norton","Michel Drucker","Cyril Hanouna","Nagui","Alessia Marcuzzi","Jorge Javier Vázquez","Jonathan Ross","Ina Müller","Stephen Colbert","Jay Leno","Conan O'Brien","Anne-Sophie Lapix","Stéphane Bern","Larry King","Ryan Seacrest"] },
+  { id:"scientifiques", nom:"Scientifiques", emoji:"🔬", questions:["Domaine physique ou maths ?","Encore en vie ?","Homme ?","A reçu un prix Nobel ?","A vécu avant le XXe siècle ?","Nationalité européenne ?","Découverte utilisée au quotidien ?","A changé l'histoire de l'humanité ?","A été controversé ?","Son nom = unité ou loi scientifique ?"], personnages:["Albert Einstein","Isaac Newton","Charles Darwin","Nikola Tesla","Stephen Hawking","Galilée","Thomas Edison","Louis Pasteur","Alan Turing","Leonardo da Vinci","Sigmund Freud","Ada Lovelace","Archimède","Copernic","Alexander Fleming","Carl Sagan","Elon Musk","Tim Berners-Lee","Marie Curie","James Watson"] }
+];
 const CATS = [
   { id:"sportifs", nom:"Sportifs", emoji:"⚽", questions:["Sport individuel (pas collectif) ?","A gagné une médaille olympique ?","Nationalité européenne ?","Homme ?","Encore actif ?","A plus de 30 ans ?","Footballeur ?","Tennisman/Tenniswoman ?","Nageur/Nageuse ?","A un surnom très connu ?"], personnages:["Lionel Messi","Cristiano Ronaldo","Serena Williams","LeBron James","Usain Bolt","Michael Jordan","Simone Biles","Rafael Nadal","Kylian Mbappé","Naomi Osaka","Novak Djokovic","Muhammad Ali","Megan Rapinoe","Michael Phelps","Neymar","Katie Ledecky","Neisser Loyola","Désiré Doué","Léon Marchand","Femke Bol"] },
   { id:"acteurs", nom:"Acteurs", emoji:"🎬", questions:["A gagné un Oscar ou équivalent ?","Plus connu au cinéma qu'en série ?","Américain(e) ?","Homme ?","Carrière avant les années 2000 ?","Joue dans des super-héros / franchises ?","A plus de 50 ans ?","A joué un méchant marquant ?","Connu(e) pour autre chose que le jeu d'acteur ?","Originaire d'un pays anglophone ?"], personnages:["Leonardo DiCaprio","Meryl Streep","Denzel Washington","Scarlett Johansson","Tom Hanks","Angelina Jolie","Robert Downey Jr.","Zendaya","Brad Pitt","Emma Watson","Will Smith","Penélope Cruz","Morgan Freeman","Marion Cotillard","Dwayne Johnson","Charlize Theron","Idris Elba","Natalie Portman","Song Kang-ho","Tom Holland"] },
@@ -291,6 +306,7 @@ const REPONSES = {
     "Nikkie de Jager":[true,false,false,false,false,false,true,false,true,true]
   }
 };
+
 let state = {
   screen:"home", mode:"solo", cat:null,
   secrets:[null,null], pickingFor:0, currentPlayer:0,
@@ -329,6 +345,23 @@ function eliminateByAnswer(catId, qIndex, answer){
     const rep = getReponse(catId, p, qIndex);
     if(rep !== null && rep !== answer) state.eliminated.add(p);
   });
+}
+
+function showPayModal(cat){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal">
+      <div style="font-size:40px;margin-bottom:12px">${cat.emoji}</div>
+      <h3>${cat.nom}</h3>
+      <p>Cette catégorie avec 20 nouvelles célébrités et 10 questions exclusives sera bientôt disponible !</p>
+      <div class="modal-price">1,99€</div>
+      <button class="btn-full btn-coral" style="margin-bottom:0" onclick="this.closest('.modal').querySelector('p').textContent='Paiement bientôt disponible ! Revenez prochainement.'">Acheter cette catégorie</button>
+      <button class="modal-close" onclick="document.querySelector('.modal-overlay').remove()">Fermer</button>
+    </div>
+  `;
+  document.getElementById("app").appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
 }
 
 function render(){
@@ -374,6 +407,19 @@ function renderHome(app){
     btn.className = "cat-card"+(state.cat?.id===c.id?" active":"");
     btn.innerHTML = `<div class="cat-emoji">${c.emoji}</div><div class="cat-name">${c.nom}</div>`;
     btn.onclick = ()=>{ state.cat=c; render(); };
+    grid.appendChild(btn);
+  });
+  CATS_PAYANTES.forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "cat-card locked";
+    btn.style.position = "relative";
+    btn.innerHTML = `
+      <div style="position:absolute;top:10px;right:10px;font-size:14px">🔒</div>
+      <div class="cat-emoji">${c.emoji}</div>
+      <div class="cat-name">${c.nom}</div>
+      <div class="cat-price">1,99€</div>
+    `;
+    btn.onclick = ()=>{ showPayModal(c); };
     grid.appendChild(btn);
   });
   div.querySelector("#btn-start").onclick = ()=>{
@@ -521,6 +567,7 @@ function renderGame(app){
       `;
       panel.appendChild(bubble);
     }
+
     const qlabel = document.createElement("div");
     qlabel.className = "q-label";
     qlabel.textContent = "Choisis une question :";
