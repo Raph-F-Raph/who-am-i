@@ -459,7 +459,10 @@ function renderPick(app){
 
 function renderGame(app){
   const cat = state.cat;
-  const secret = state.secrets[state.currentPlayer];
+  // En multi : le joueur devine le personnage choisi PAR l'autre joueur
+  const secret = state.mode==="multi"
+    ? state.secrets[state.currentPlayer===0 ? 1 : 0]
+    : state.secrets[0];
 
   const header = document.createElement("div");
   header.className = "header";
@@ -497,9 +500,9 @@ function renderGame(app){
     grid.appendChild(card);
   });
   app.appendChild(grid);
-
   const panel = document.createElement("div");
   panel.className = "panel";
+
   if(state.phase==="playing"){
     if(state.lastAnswer){
       const bubble = document.createElement("div");
@@ -601,7 +604,6 @@ function renderGame(app){
     title.style.cssText = "font-size:15px;font-weight:700;margin-bottom:10px;";
     title.textContent = "Qui est-ce selon toi ?";
     panel.appendChild(title);
-
     const list = document.createElement("div");
     list.className = "guess-list";
     cat.personnages.filter(n=>!state.eliminated.has(n)).forEach(name=>{
