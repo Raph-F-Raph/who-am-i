@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Who Am I?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2314162B'/><text y='78' x='50' text-anchor='middle' font-size='80' font-family='Arial Black,Arial' font-weight='900' fill='white'>?</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2314162B'/><text y='78' x='50' text-anchor='middle' font-size='80' font-family='Arial Black,Arial' font-weight='900' fill='white'>?</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Who Am I?">
+<meta name="theme-color" content="#14162B">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #14162B; color: #F5F3ED; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
@@ -165,6 +170,7 @@ const PHOTOS = {
   "Marques Brownlee":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MARQUES_BROWNLEE_Profile_Picture.jpg/500px-MARQUES_BROWNLEE_Profile_Picture.jpg",
   "Nikkie de Jager":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/NikkiedeJager2020-2.jpg/500px-NikkiedeJager2020-2.jpg"
 };
+
 const CATS = [
   { id:"sportifs", nom:"Sportifs", emoji:"⚽", questions:["Sport individuel (pas collectif) ?","A gagné une médaille olympique ?","Nationalité européenne ?","Homme ?","Encore actif ?","A plus de 30 ans ?","Footballeur ?","Tennisman/Tenniswoman ?","Nageur/Nageuse ?","A un surnom très connu ?"], personnages:["Lionel Messi","Cristiano Ronaldo","Serena Williams","LeBron James","Usain Bolt","Michael Jordan","Simone Biles","Rafael Nadal","Kylian Mbappé","Naomi Osaka","Novak Djokovic","Muhammad Ali","Megan Rapinoe","Michael Phelps","Neymar","Katie Ledecky","Neisser Loyola","Désiré Doué","Léon Marchand","Femke Bol"] },
   { id:"acteurs", nom:"Acteurs", emoji:"🎬", questions:["A gagné un Oscar ou équivalent ?","Plus connu au cinéma qu'en série ?","Américain(e) ?","Homme ?","Carrière avant les années 2000 ?","Joue dans des super-héros / franchises ?","A plus de 50 ans ?","A joué un méchant marquant ?","Connu(e) pour autre chose que le jeu d'acteur ?","Originaire d'un pays anglophone ?"], personnages:["Leonardo DiCaprio","Meryl Streep","Denzel Washington","Scarlett Johansson","Tom Hanks","Angelina Jolie","Robert Downey Jr.","Zendaya","Brad Pitt","Emma Watson","Will Smith","Penélope Cruz","Morgan Freeman","Marion Cotillard","Dwayne Johnson","Charlize Theron","Idris Elba","Natalie Portman","Song Kang-ho","Tom Holland"] },
@@ -285,7 +291,6 @@ const REPONSES = {
     "Nikkie de Jager":[true,false,false,false,false,false,true,false,true,true]
   }
 };
-
 let state = {
   screen:"home", mode:"solo", cat:null,
   secrets:[null,null], pickingFor:0, currentPlayer:0,
@@ -516,11 +521,11 @@ function renderGame(app){
       `;
       panel.appendChild(bubble);
     }
-
     const qlabel = document.createElement("div");
     qlabel.className = "q-label";
     qlabel.textContent = "Choisis une question :";
     panel.appendChild(qlabel);
+
     const qlist = document.createElement("div");
     qlist.className = "q-selector";
     cat.questions.forEach((q,i)=>{
