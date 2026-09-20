@@ -412,7 +412,7 @@ function renderPick(app){
   div.innerHTML = `
     <div>
       <div style="font-size:13px;color:#FF6B4A;font-weight:700">JOUEUR ${state.pickingFor+1}</div>
-      <h2 style="margin-top:4px;font-size:22px;font-weight:800">Choisis le personnage secret de ton adversaire</h2>
+      <h2 style="margin-top:4px;font-size:22px;font-weight:800">Choisis ton propre personnage secret</h2>
     </div>
     <div class="pick-grid" id="pick-grid"></div>
     <button class="btn-full btn-disabled" id="btn-confirm">Confirmer</button>
@@ -459,7 +459,9 @@ function renderPick(app){
 
 function renderGame(app){
   const cat = state.cat;
-  // En multi : le joueur devine le personnage choisi PAR l'autre joueur
+  // En multi : le joueur devine le personnage que l'AUTRE a choisi pour lui-même
+  // Joueur 1 (currentPlayer=0) devine secrets[1] (choisi par Joueur 2)
+  // Joueur 2 (currentPlayer=1) devine secrets[0] (choisi par Joueur 1)
   const secret = state.mode==="multi"
     ? state.secrets[state.currentPlayer===0 ? 1 : 0]
     : state.secrets[0];
@@ -500,6 +502,7 @@ function renderGame(app){
     grid.appendChild(card);
   });
   app.appendChild(grid);
+
   const panel = document.createElement("div");
   panel.className = "panel";
 
@@ -518,7 +521,6 @@ function renderGame(app){
     qlabel.className = "q-label";
     qlabel.textContent = "Choisis une question :";
     panel.appendChild(qlabel);
-
     const qlist = document.createElement("div");
     qlist.className = "q-selector";
     cat.questions.forEach((q,i)=>{
@@ -604,6 +606,7 @@ function renderGame(app){
     title.style.cssText = "font-size:15px;font-weight:700;margin-bottom:10px;";
     title.textContent = "Qui est-ce selon toi ?";
     panel.appendChild(title);
+
     const list = document.createElement("div");
     list.className = "guess-list";
     cat.personnages.filter(n=>!state.eliminated.has(n)).forEach(name=>{
