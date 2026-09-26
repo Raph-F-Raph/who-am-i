@@ -309,7 +309,11 @@ const REPONSES = {
   }
 };
 
-let scores = JSON.parse(localStorage.getItem('whoami_scores') || '[0,0]');
+let scores;
+try {
+  scores = JSON.parse(localStorage.getItem('whoami_scores') || '[0,0]');
+  if (!Array.isArray(scores) || scores.length !== 2) scores = [0,0];
+} catch(e) { scores = [0,0]; }
 
 let state = {
   screen:"home", mode:"solo", cat:null,
@@ -350,7 +354,6 @@ function eliminateByAnswer(catId, qIndex, answer){
     if(rep !== null && rep !== answer) state.eliminated.add(p);
   });
 }
-
 function showPayModal(cat){
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
@@ -543,6 +546,7 @@ function renderGame(app){
     bar.textContent = `Joueur ${state.currentPlayer+1} — devine le personnage de l'autre`;
     app.appendChild(bar);
   }
+
   const grid = document.createElement("div");
   grid.className = "char-grid";
   cat.personnages.forEach(name=>{
@@ -689,6 +693,7 @@ function renderGame(app){
     backBtn.onclick = ()=>{ state.phase="playing"; render(); };
     panel.appendChild(backBtn);
   }
+
   else if(state.phase==="result"){
     const won = state.finalGuess === secret;
     if(won){ 
@@ -730,6 +735,7 @@ function renderGame(app){
 
   app.appendChild(panel);
 }
+
 render();
 </script>
 </body>
